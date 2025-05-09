@@ -17,6 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -107,26 +110,6 @@ fun MainScreen(
             },
             onDeleteClick = { viewModel.deleteBarang(it) }
         )
-
-//        if (viewModel.showDialog) {
-//            BarangFormDialog(
-//                barang = viewModel.currentBarang,
-//                nama = viewModel.namaBarang,
-//                stok = viewModel.stokBarang,
-//                harga = viewModel.hargaBarang,
-//                onNamaChange = { viewModel.namaBarang = it },
-//                onStokChange = { viewModel.stokBarang = it },
-//                onHargaChange = { viewModel.hargaBarang = it },
-//                onDismiss = { viewModel.hideDialog() },
-//                onSave = {
-//                    if (viewModel.currentBarang == null) {
-//                        viewModel.insertBarang()
-//                    } else {
-//                        viewModel.updateBarang()
-//                    }
-//                }
-//            )
-//        }
     }
 }
 
@@ -138,6 +121,9 @@ fun ScreenContent(
     onEditClick: (Barang) -> Unit,
     onDeleteClick: (Barang) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedBarang by remember { mutableStateOf<Barang?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -152,20 +138,19 @@ fun ScreenContent(
             }
         } else {
             if (showList) {
-                // List Layout
-                LazyColumn(
-                    contentPadding = PaddingValues(4.dp)
-                ) {
+                LazyColumn(contentPadding = PaddingValues(4.dp)) {
                     items(barangList) { barang ->
                         BarangCard(
                             barang = barang,
                             onEditClick = { onEditClick(barang) },
-                            onDeleteClick = { onDeleteClick(barang) }
+                            onDeleteClick = {
+                                selectedBarang = barang
+                                showDialog = true
+                            }
                         )
                     }
                 }
             } else {
-                // Grid Layout
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier.fillMaxSize(),
@@ -174,18 +159,32 @@ fun ScreenContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(barangList.size) { index ->
+                        val barang = barangList[index]
                         BarangCard(
-                            barang = barangList[index],
-                            onEditClick = { onEditClick(barangList[index]) },
-                            onDeleteClick = { onDeleteClick(barangList[index]) }
+                            barang = barang,
+                            onEditClick = { onEditClick(barang) },
+                            onDeleteClick = {
+                                selectedBarang = barang
+                                showDialog = true
+                            }
                         )
                     }
                 }
-
             }
         }
     }
+
+    if (showDialog && selectedBarang != null) {
+        DisplayAlertDialog(
+            onDismissRequest = { showDialog = false },
+            onConfirmation = {
+                onDeleteClick(selectedBarang!!)
+                showDialog = false
+            }
+        )
+    }
 }
+
 
 
 @Composable
