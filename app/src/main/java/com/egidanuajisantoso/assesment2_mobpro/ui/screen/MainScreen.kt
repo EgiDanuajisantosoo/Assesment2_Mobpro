@@ -1,5 +1,6 @@
 package com.egidanuajisantoso.assesment2_mobpro.ui.screen
 
+import android.app.Application
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,19 +11,36 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.egidanuajisantoso.assesment2_mobpro.R
+import com.egidanuajisantoso.assesment2_mobpro.model.Barang
+import com.egidanuajisantoso.assesment2_mobpro.navigation.Screen
 import com.egidanuajisantoso.assesment2_mobpro.ui.theme.Assesment2_MobproTheme
+import com.egidanuajisantoso.assesment2_mobpro.util.BarangViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    navController: NavHostController,
+    viewModel: BarangViewModel = viewModel(
+        factory = BarangViewModelFactory(LocalContext.current.applicationContext as Application)
+    )
+) {
+    val barangList by viewModel.allBarang.collectAsState(initial = emptyList())
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -40,7 +58,7 @@ fun MainScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = { navController.navigate(Screen.FormBaru.route) },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
@@ -50,32 +68,76 @@ fun MainScreen() {
             }
         }
     ) { padding ->
-        ScreenContent(modifier = Modifier.padding(padding))
+        ScreenContent(
+            modifier = Modifier.padding(padding),
+            barangList = barangList,
+            onEditClick = { barang ->
+                navController.navigate(Screen.FormUbah.createRoute(barang.id))
+            },
+            onDeleteClick = { viewModel.deleteBarang(it) }
+        )
+
+//        if (viewModel.showDialog) {
+//            BarangFormDialog(
+//                barang = viewModel.currentBarang,
+//                nama = viewModel.namaBarang,
+//                stok = viewModel.stokBarang,
+//                harga = viewModel.hargaBarang,
+//                onNamaChange = { viewModel.namaBarang = it },
+//                onStokChange = { viewModel.stokBarang = it },
+//                onHargaChange = { viewModel.hargaBarang = it },
+//                onDismiss = { viewModel.hideDialog() },
+//                onSave = {
+//                    if (viewModel.currentBarang == null) {
+//                        viewModel.insertBarang()
+//                    } else {
+//                        viewModel.updateBarang()
+//                    }
+//                }
+//            )
+//        }
     }
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier) {
-    val barangList = listOf(
-        "Sabun", "Shampoo", "Minyak Goreng", "Gula", "Garam",
-        "Susu", "Mie Instan", "Tepung Terigu", "Beras", "Kopi"
-    )
-
+fun ScreenContent(
+    modifier: Modifier = Modifier,
+    barangList: List<Barang>,
+    onEditClick: (Barang) -> Unit,
+    onDeleteClick: (Barang) -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        LazyColumn {
-            items(barangList) { namaBarang ->
-                BarangCard(namaBarang = namaBarang, stok = 20, harga = "Rp10.000")
+        if (barangList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Tidak ada data barang", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyColumn {
+                items(barangList) { barang ->
+                    BarangCard(
+                        barang = barang,
+                        onEditClick = { onEditClick(barang) },
+                        onDeleteClick = { onDeleteClick(barang) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun BarangCard(namaBarang: String, stok: Int, harga: String) {
+fun BarangCard(
+    barang: Barang,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -83,17 +145,17 @@ fun BarangCard(namaBarang: String, stok: Int, harga: String) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = "Nama Barang: $namaBarang", fontWeight = FontWeight.Bold)
-            Text(text = "Stok: $stok")
-            Text(text = "Harga: $harga")
+            Text(text = "Nama Barang: ${barang.nama}", fontWeight = FontWeight.Bold)
+            Text(text = "Stok: ${barang.stok}")
+            Text(text = "Harga: ${barang.harga}")
             Row(
                 modifier = Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TextButton(onClick = {  }) {
+                TextButton(onClick = onEditClick) {
                     Text("Edit", color = Color.Blue)
                 }
-                TextButton(onClick = { }) {
+                TextButton(onClick = onDeleteClick) {
                     Text("Delete", color = Color.Red)
                 }
             }
@@ -106,6 +168,6 @@ fun BarangCard(namaBarang: String, stok: Int, harga: String) {
 @Composable
 fun MainScreenPreview() {
     Assesment2_MobproTheme {
-        MainScreen()
+        MainScreen(rememberNavController())
     }
 }
