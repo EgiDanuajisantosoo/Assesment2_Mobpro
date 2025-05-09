@@ -5,8 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.egidanuajisantoso.assesment2_mobpro.database.BarangDb.AppDatabase
+import com.egidanuajisantoso.assesment2_mobpro.database.AppDatabase
 import com.egidanuajisantoso.assesment2_mobpro.model.Barang
+import com.egidanuajisantoso.assesment2_mobpro.model.RecycleBarang
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,9 +29,30 @@ class BarangViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         val barangDao = AppDatabase.getDatabase(application).barangDao()
-        repository = BarangRepository(barangDao)
+        val recycleBarangDao = AppDatabase.getDatabase(application).recycleBarangDao()
+        repository = BarangRepository(barangDao, recycleBarangDao)
         allBarang = repository.allBarang
     }
+
+    fun softDeleteBarang(barang: Barang) = viewModelScope.launch {
+        // 1. Pindahkan ke recycle bin
+        val recycleBarang = RecycleBarang(
+            originalId = barang.id,
+            nama = barang.nama,
+            stok = barang.stok,
+            harga = barang.harga
+        )
+        repository.insertToRecycle(recycleBarang)
+
+        // 2. Hapus dari tabel utama
+        repository.deleteBarang(barang)
+    }
+
+    fun restoreBarang(recycleBarang: RecycleBarang) = viewModelScope.launch {
+        repository.restore(recycleBarang)
+    }
+
+    val allRecycleBarang: Flow<List<RecycleBarang>> = repository.getAllRecycleBarang()
 
     fun hideDialog() {
         showDialog = false
@@ -53,6 +75,10 @@ class BarangViewModel(application: Application) : AndroidViewModel(application) 
             repository.insert(barang)
             hideDialog()
         }
+    }
+
+    fun deleteRecycleBarang(recycleBarang: RecycleBarang) = viewModelScope.launch {
+        repository.deletePermanently(recycleBarang)
     }
 
 

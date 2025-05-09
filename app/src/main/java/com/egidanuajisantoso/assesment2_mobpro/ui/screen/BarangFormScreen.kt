@@ -2,7 +2,6 @@ package com.egidanuajisantoso.assesment2_mobpro.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,13 +14,13 @@ import com.egidanuajisantoso.assesment2_mobpro.model.Barang
 import com.egidanuajisantoso.assesment2_mobpro.util.BarangViewModelFactory
 import android.app.Application
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.text.input.ImeAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-//import androidx.compose.ui.text.input.KeyboardOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +59,7 @@ fun BarangFormScreen(
                 title = { Text(text = if (isEditMode) "Edit Barang" else "Tambah Barang") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(

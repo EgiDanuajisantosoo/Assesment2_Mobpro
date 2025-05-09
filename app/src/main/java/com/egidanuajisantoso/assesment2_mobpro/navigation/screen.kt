@@ -7,4 +7,5 @@ sealed class Screen(val route: String) {
     object FormUbah : Screen("form_ubah/{id}") {
         fun createRoute(id: Int) = "form_ubah/$id"
     }
+    object RecycleBin : Screen("recycle_bin")
 }

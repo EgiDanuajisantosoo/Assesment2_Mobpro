@@ -83,6 +83,13 @@ fun MainScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
+                    IconButton(onClick = { navController.navigate(Screen.RecycleBin.route) }) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_delete_24),
+                            contentDescription = "Recycle Bin",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 },
                 modifier = Modifier
                     .padding(5.dp)
@@ -108,7 +115,7 @@ fun MainScreen(
             onEditClick = { barang ->
                 navController.navigate(Screen.FormUbah.createRoute(barang.id))
             },
-            onDeleteClick = { viewModel.deleteBarang(it) }
+            onDeleteClick = { viewModel.softDeleteBarang(it) }
         )
     }
 }
@@ -241,14 +248,3 @@ fun MainScreenPreview() {
         MainScreen(rememberNavController())
     }
 }
-
-
-//LazyColumn {
-//    items(barangList) { barang ->
-//        BarangCard(
-//            barang = barang,
-//            onEditClick = { onEditClick(barang) },
-//            onDeleteClick = { onDeleteClick(barang) }
-//        )
-//    }
-//}

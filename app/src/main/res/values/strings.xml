@@ -6,4 +6,8 @@
     <string name="pesan_hapus">Apakah Anda Ingin Menghapus Data Barang?</string>
     <string name="tombol_hapus">Hapus</string>
     <string name="tombol_batal">Batal</string>
+    <string name="recycle_bin">Recycle Bin</string>
+    <string name="restore">Kembalikan</string>
+    <string name="permanent_delete">Hapus Permanen</string>
+    <string name="delete_confirmation">Apakah Anda yakin ingin menghapus permanen barang ini?</string>
 </resources>
