@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Assesment2_Mobpro</string>
     <string name="nama_aplikasi">Aplikasi Stok Barang</string>
+    <string name="grid">Tampilan Grid</string>
+    <string name="list">Tampilan List</string>
+    <string name="pesan_hapus">Apakah Anda Ingin Menghapus Data Barang?</string>
+    <string name="tombol_hapus">Hapus</string>
+    <string name="tombol_batal">Batal</string>
 </resources>

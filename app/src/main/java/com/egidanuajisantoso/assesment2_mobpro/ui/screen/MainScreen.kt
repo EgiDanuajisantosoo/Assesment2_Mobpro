@@ -4,7 +4,11 @@ import android.app.Application
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,6 +36,10 @@ import com.egidanuajisantoso.assesment2_mobpro.model.Barang
 import com.egidanuajisantoso.assesment2_mobpro.navigation.Screen
 import com.egidanuajisantoso.assesment2_mobpro.ui.theme.Assesment2_MobproTheme
 import com.egidanuajisantoso.assesment2_mobpro.util.BarangViewModelFactory
+import com.egidanuajisantoso.assesment2_mobpro.util.SettingDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +50,8 @@ fun MainScreen(
     )
 ) {
     val barangList by viewModel.allBarang.collectAsState(initial = emptyList())
-
+    val dataStore = SettingDataStore(LocalContext.current)
+    val showList by dataStore.layoutFlow.collectAsState(true)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,6 +62,25 @@ fun MainScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
+                actions = {
+                    IconButton(onClick = {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            dataStore.saveLayout(!showList)
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(
+                                if (showList) R.drawable.baseline_grid_view_24
+                                else R.drawable.baseline_view_list_24
+                            ),
+                            contentDescription = stringResource(
+                                if (showList) R.string.grid
+                                else R.string.list
+                            ),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
                 modifier = Modifier
                     .padding(5.dp)
                     .clip(RoundedCornerShape(18.dp))
@@ -69,6 +99,7 @@ fun MainScreen(
         }
     ) { padding ->
         ScreenContent(
+            showList,
             modifier = Modifier.padding(padding),
             barangList = barangList,
             onEditClick = { barang ->
@@ -101,6 +132,7 @@ fun MainScreen(
 
 @Composable
 fun ScreenContent(
+    showList: Boolean,
     modifier: Modifier = Modifier,
     barangList: List<Barang>,
     onEditClick: (Barang) -> Unit,
@@ -119,18 +151,42 @@ fun ScreenContent(
                 Text("Tidak ada data barang", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
-            LazyColumn {
-                items(barangList) { barang ->
-                    BarangCard(
-                        barang = barang,
-                        onEditClick = { onEditClick(barang) },
-                        onDeleteClick = { onDeleteClick(barang) }
-                    )
+            if (showList) {
+                // List Layout
+                LazyColumn(
+                    contentPadding = PaddingValues(4.dp)
+                ) {
+                    items(barangList) { barang ->
+                        BarangCard(
+                            barang = barang,
+                            onEditClick = { onEditClick(barang) },
+                            onDeleteClick = { onDeleteClick(barang) }
+                        )
+                    }
                 }
+            } else {
+                // Grid Layout
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(barangList.size) { index ->
+                        BarangCard(
+                            barang = barangList[index],
+                            onEditClick = { onEditClick(barangList[index]) },
+                            onDeleteClick = { onDeleteClick(barangList[index]) }
+                        )
+                    }
+                }
+
             }
         }
     }
 }
+
 
 @Composable
 fun BarangCard(
@@ -141,13 +197,27 @@ fun BarangCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = "Nama Barang: ${barang.nama}", fontWeight = FontWeight.Bold)
-            Text(text = "Stok: ${barang.stok}")
-            Text(text = "Harga: ${barang.harga}")
+            Text(
+                text = "Nama: ${barang.nama}",
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Stok: ${barang.stok}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Harga: ${barang.harga}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Row(
                 modifier = Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -163,6 +233,7 @@ fun BarangCard(
     }
 }
 
+
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
@@ -171,3 +242,14 @@ fun MainScreenPreview() {
         MainScreen(rememberNavController())
     }
 }
+
+
+//LazyColumn {
+//    items(barangList) { barang ->
+//        BarangCard(
+//            barang = barang,
+//            onEditClick = { onEditClick(barang) },
+//            onDeleteClick = { onDeleteClick(barang) }
+//        )
+//    }
+//}
